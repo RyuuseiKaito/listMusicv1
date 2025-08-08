@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-dark: #0D1117;
+            --bg-container: #161B22;
+            --border-color: #30363D;
+            --primary-text: #E6EDF3;
+            --secondary-text: #8D96A0;
+            --accent-blue: #2F81F7;
+            --accent-green: #238636;
+            --hover-color: #2c2c2c;
+            --font-ui: 'Inter', sans-serif;
+            --font-file: 'Roboto', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            font-family: var(--font-ui);
+            color: var(--primary-text);
+            margin: 0;
+        }
+
+        .dashboard-wrapper {
+            padding: 20px;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: auto;
+            background-color: var(--bg-container);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        /* --- Navigasi Tab Baru --- */
+        .dashboard-tabs {
+            display: flex;
+            background-color: #010409;
+            padding: 0 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .tab-link {
+            padding: 16px 20px;
+            border: none;
+            background: none;
+            color: var(--secondary-text);
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            position: relative;
+            transition: color 0.2s ease;
+        }
+        .tab-link:hover {
+            color: var(--primary-text);
+        }
+        .tab-link.active {
+            color: var(--primary-text);
+            font-weight: 600;
+        }
+        .tab-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background-color: var(--accent-blue);
+            border-radius: 3px 3px 0 0;
+        }
+
+        /* --- Konten Utama --- */
+        .dashboard-content {
+            padding: 32px;
+            height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .page { display: none; }
+        .page.active { display: block; }
+        
+        .page-header { margin-bottom: 24px; }
+        .page-header h2 { font-size: 2em; margin: 0 0 8px 0; color: #ffffff; }
+        .page-header p { font-size: 1em; color: var(--secondary-text); margin: 0; }
+        
+        /* --- Styling Konten Halaman --- */
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .card {
+            background-color: var(--bg-dark); border: 1px solid var(--border-color);
+            border-radius: 8px; padding: 20px; cursor: pointer;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+        .card:hover { transform: translateY(-5px); border-color: var(--accent-blue); }
+        .card h3 { margin: 0 0 8px 0; }
+        .card p { margin: 0; font-size: 0.9em; color: var(--secondary-text); }
+        
+        .safelink-panel { max-width: 600px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; }
+        .form-input {
+            width: 100%; padding: 12px; background-color: var(--bg-dark);
+            border: 1px solid var(--border-color); border-radius: 6px;
+            color: var(--primary-text); font-size: 1em; box-sizing: border-box;
+        }
+        .btn { padding: 12px 20px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; background-color: var(--accent-blue); color: #fff; }
+        .safelink-result { display: none; background-color: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 8px; padding: 24px; }
+        .safelink-result h3 { margin: 0 0 16px 0; color: var(--accent-green); }
+        .generated-link-wrapper { display: flex; gap: 12px; background-color: #010409; padding: 12px; border-radius: 6px; margin-bottom: 20px; }
+        .generated-link { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--secondary-text); }
+        .copy-btn { background-color: var(--border-color); color: var(--primary-text); border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
+
+        /* Safelink History Styles */
+        .safelink-history {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+        .safelink-history h3 {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #ffffff;
+        }
+        .safelink-history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .history-item {
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+        }
+        .history-item:hover {
+            border-color: var(--accent-blue);
+        }
+        .history-item-details {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+        .history-item-details p {
+            margin: 0;
+            font-size: 0.9em;
+            color: var(--secondary-text);
+            /* Removed truncation for full URL display */
+            white-space: normal; /* Allow text to wrap */
+            word-break: break-all; /* Break long words */
+            overflow: visible; /* Ensure full text is visible */
+            text-overflow: clip; /* No ellipsis */
+        }
+        .history-item-details strong {
+            color: var(--primary-text);
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        .history-item-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .history-item .copy-btn {
+            padding: 6px 10px;
+            font-size: 0.85em;
+            background-color: var(--accent-blue);
+            color: #fff;
+        }
+        .history-item .copy-btn:hover {
+            opacity: 0.9;
+        }
+        .history-item .delete-btn {
+            background-color: #d32f2f; /* Red color for delete */
+            color: #fff;
+            padding: 6px 10px;
+            font-size: 0.85em;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+        }
+        .history-item .delete-btn:hover {
+            opacity: 0.9;
+        }
+        .history-item .timestamp {
+            font-size: 0.75em;
+            color: #6c757d;
+            text-align: right;
+            margin-top: 5px;
+        }
+
+
+        /* --- FILE EXPLORER STYLES --- */
+        .fm-header { display: flex; align-items: center; padding-bottom: 16px; border-bottom: 1px solid var(--border-color); margin-bottom: 16px; }
+        .fm-header .back-btn { background: none; border: none; color: var(--primary-text); cursor: pointer; font-size: 24px; margin-right: 16px; padding: 0; }
+        .fm-path { font-size: 1em; color: var(--secondary-text); }
+        .list-item { display: flex; align-items: center; padding: 12px 8px; border-radius: 8px; cursor: pointer; transition: background-color 0.2s; font-family: var(--font-file); }
+        .list-item:hover { background-color: var(--hover-color); }
+        .item-icon { width: 40px; height: 40px; margin-right: 16px; flex-shrink: 0; }
+        .item-icon img, .item-icon svg { width: 100%; height: 100%; object-fit: cover; }
+        .item-details { flex-grow: 1; overflow: hidden; }
+        .item-name { font-size: 1em; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .item-meta { font-size: 0.8em; color: var(--secondary-text); }
+        .item-date { font-size: 0.8em; color: var(--secondary-text); flex-shrink: 0; margin-left: 16px; }
+
+        /* --- Context Menu & Modals (Shared) --- */
+        .context-menu { position: fixed; z-index: 1001; background-color: #2C2C2C; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); padding: 8px 0; display: none; min-width: 220px; }
+        .context-menu-item { display: flex; align-items: center; gap: 16px; padding: 12px 16px; cursor: pointer; font-size: 1em; }
+        .context-menu-item:hover { background-color: #3a3a3a; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; box-sizing: border-box; }
+        .modal-content { background-color: var(--bg-container); border-radius: 12px; width: 100%; max-width: 500px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; }
+        .modal-header { padding: 16px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 12px; }
+        .modal-title { font-size: 1.2em; font-weight: 500; }
+        .modal-body { padding: 20px; overflow-y: auto; }
+        .modal-footer { padding: 16px; display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--border-color); }
+        .modal-btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 500; text-decoration: none; display: inline-block; }
+        .btn-secondary { background-color: var(--border-color); color: var(--primary-text); }
+        .btn-primary { background-color: var(--accent-blue); color: #fff; }
+        
+        /* Custom Message Box */
+        .message-box-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1002;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .message-box-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .message-box-content {
+            background-color: var(--bg-container);
+            border-radius: 12px;
+            padding: 25px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+        .message-box-overlay.show .message-box-content {
+            transform: translateY(0);
+        }
+        .message-box-content h4 {
+            margin-top: 0;
+            color: var(--primary-text);
+            font-size: 1.3em;
+            margin-bottom: 15px;
+        }
+        .message-box-content p {
+            color: var(--secondary-text);
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+        .message-box-content button {
+            background-color: var(--accent-blue);
+            color: #fff;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: background-color 0.2s ease;
+        }
+        .message-box-content button:hover {
+            background-color: #256bbd;
+        }
+
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .dashboard-wrapper { padding: 10px; }
+            .dashboard-tabs { padding: 0 10px; }
+            .tab-link { padding: 12px 10px; font-size: 0.9em; }
+            .dashboard-content { padding: 24px; }
+            .item-date { display: none; }
+            .history-item { flex-direction: column; align-items: flex-start; }
+            .history-item-actions { width: 100%; justify-content: flex-end; }
+        }
+    </style>
+
+    <!-- Firebase SDK (Not used for safelink history anymore, but kept for other potential features) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        // Firestore imports are removed as safelink history will use localStorage
+        // import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global Firebase variables accessible in the script below
+        window.firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        window.appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        window.initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        window.fbApp = initializeApp(window.firebaseConfig);
+        window.db = null; // Set to null as Firestore is not primarily used here
+        window.auth = getAuth(window.fbApp);
+
+        // Firestore functions are no longer globally exposed for safelink history
+        // window.collection = collection;
+        // window.doc = doc;
+        // window.addDoc = addDoc;
+        // window.deleteDoc = deleteDoc;
+        // window.onSnapshot = onSnapshot;
+        // window.serverTimestamp = serverTimestamp;
+
+        window.userId = null;
+        window.isAuthReady = false;
+
+        onAuthStateChanged(window.auth, async (user) => {
+            if (user) {
+                window.userId = user.uid;
+                console.log("Firebase: Authenticated as", window.userId);
+            } else {
+                // If no user, sign in anonymously if no custom token was provided
+                if (!window.initialAuthToken) {
+                    try {
+                        const anonUserCredential = await signInAnonymously(window.auth);
+                        window.userId = anonUserCredential.user.uid;
+                        console.log("Firebase: Signed in anonymously as", window.userId);
+                    } catch (error) {
+                        console.error("Firebase: Anonymous sign-in failed", error);
+                    }
+                } else {
+                    console.log("Firebase: No user and no custom token to sign in with.");
+                }
+            }
+            window.isAuthReady = true;
+            // Dispatch a custom event to signal that Firebase is ready
+            document.dispatchEvent(new CustomEvent('firebaseReady'));
+        });
+
+        // Sign in with custom token if available
+        if (window.initialAuthToken) {
+            signInWithCustomToken(window.auth, window.initialAuthToken)
+                .then((userCredential) => {
+                    console.log("Firebase: Signed in with custom token", userCredential.user.uid);
+                })
+                .catch((error) => {
+                    console.error("Firebase: Custom token sign-in failed", error);
+                    // Fallback to anonymous if custom token fails
+                    signInAnonymously(window.auth).then(anonUserCredential => {
+                        window.userId = anonUserCredential.user.uid;
+                        console.log("Firebase: Fallback to anonymous sign-in", window.userId);
+                    }).catch(anonError => {
+                        console.error("Firebase: Initial anonymous sign-in failed", anonError);
+                    });
+                });
+        } else if (!window.auth.currentUser) {
+            // If no custom token and no current user, attempt anonymous sign-in
+            signInAnonymously(window.auth).then(anonUserCredential => {
+                window.userId = anonUserCredential.user.uid;
+                console.log("Firebase: Signed in anonymously (initial)", window.userId);
+            }).catch(anonError => {
+                console.error("Firebase: Initial anonymous sign-in failed", anonError);
+            });
+        }
+    </script>
+</head>
+<body>
+
+<div class="dashboard-wrapper">
+    <div class="dashboard-container">
+        <header class="dashboard-tabs">
+            <button class="tab-link active" data-page="page-dashboard">Dashboard</button>
+            <button class="tab-link" data-page="page-files">Akses File</button>
+            <button class="tab-link" data-page="page-safelink">Panel Safelink</button>
+            <button class="tab-link" data-url="/p/panel-admin.html">Panel Admin</button>
+            <button class="tab-link" data-url="https://contoh.com/role-admin-panel">Panel Role Admin</button>
+            <button class="tab-link" data-url="https://contoh.com/boss-panel">Panel Boss</button>
+        </header>
+
+        <main class="dashboard-content">
+            <!-- Halaman 1: Dashboard Utama -->
+            <section id="page-dashboard" class="page active">
+                <div class="page-header">
+                    <h2>Dashboard Utama</h2>
+                    <p>Pilih panel yang ingin Anda akses dari kartu di bawah ini.</p>
+                </div>
+                <div class="card-grid">
+                    <div class="card" data-page="page-files"><h3>Akses File</h3><p>Kelola file game dan dokumen.</p></div>
+                    <div class="card" data-page="page-safelink"><h3>Panel Safelink</h3><p>Buat dan kelola link aman.</p></div>
+                    <div class="card" data-url="https://contoh.com/admin-panel"><h3>Panel Admin</h3><p>Lihat statistik pengunjung.</p></div>
+                    <div class="card" data-url="https://contoh.com/role-admin-panel"><h3>Panel Role Admin</h3><p>Atur konfigurasi panel.</p></div>
+                    <div class="card" data-url="https://contoh.com/boss-panel"><h3>Panel Boss</h3><p>Akses fitur khusus bos.</p></div>
+                </div>
+            </section>
+
+            <!-- Halaman 2: Akses File -->
+            <section id="page-files" class="page">
+                <div class="fm-header">
+                    <button id="fm-back-btn" class="back-btn" style="display: none;">&larr;</button>
+                    <div id="fm-path" class="fm-path"></div>
+                </div>
+                <div id="fm-body"></div>
+            </section>
+
+            <!-- Halaman 3: Panel Safelink -->
+            <section id="page-safelink" class="page">
+                <div class="page-header">
+                    <h2>Panel Safelink</h2>
+                    <p>Masukkan URL yang ingin Anda amankan.</p>
+                </div>
+                <div class="safelink-panel">
+                    <div id="safelink-form">
+                        <div class="form-group">
+                            <label for="original-url">URL Asli</label>
+                            <input type="url" id="original-url" class="form-input" placeholder="https://contoh.com/file">
+                        </div>
+                        <button class="btn" id="generate-btn">Generate Link</button>
+                    </div>
+                    <div class="safelink-result" id="safelink-result">
+                        <h3>Link Berhasil Dibuat!</h3>
+                        <div class="generated-link-wrapper">
+                            <span id="generated-link" class="generated-link"></span>
+                            <button class="copy-btn" id="copy-btn">Salin</button>
+                        </div>
+                        <button class="btn" id="generate-new-btn">Buat Link Baru</button>
+                    </div>
+                </div>
+
+                <div class="safelink-history">
+                    <h3>Riwayat Safelink</h3>
+                    <div id="safelink-history-list">
+                        <!-- Safelink history items will be rendered here -->
+                        <p style="text-align:center; color: var(--secondary-text); margin-top: 20px;">Memuat riwayat safelink...</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+</div>
+
+<!-- Context Menu & Modals (Shared) -->
+<div id="context-menu" class="context-menu"></div>
+<!-- Modals akan diinjeksi oleh JavaScript -->
+
+<!-- Custom Message Box HTML -->
+<div id="messageBoxOverlay" class="message-box-overlay">
+    <div class="message-box-content">
+        <h4 id="messageBoxTitle"></h4>
+        <p id="messageBoxText"></p>
+        <button id="messageBoxCloseBtn">OK</button>
+    </div>
+</div>
+
+<script type="module">
+    // ===================================================================
+    // BAGIAN 1: LOGIKA DASHBOARD & NAVIGASI
+    // ===================================================================
+    // Firebase variables are still available but Firestore functions are not used for safelink history
+    const db = window.db; // This will be null as Firestore is not initialized for safelink history
+    const auth = window.auth;
+    const appId = window.appId;
+    let userId = window.userId; 
+    let isAuthReady = window.isAuthReady; 
+
+    // Function to show custom message box
+    function showMessage(title, text, isConfirm = false, callback = null) {
+        const messageBoxOverlay = document.getElementById('messageBoxOverlay');
+        const messageBoxTitle = document.getElementById('messageBoxTitle');
+        const messageBoxText = document.getElementById('messageBoxText');
+        const messageBoxCloseBtn = document.getElementById('messageBoxCloseBtn');
+
+        messageBoxTitle.textContent = title;
+        messageBoxText.textContent = text;
+        messageBoxOverlay.classList.add('show');
+
+        // Clear previous event listeners
+        messageBoxCloseBtn.replaceWith(messageBoxCloseBtn.cloneNode(true));
+        const newMessageBoxCloseBtn = document.getElementById('messageBoxCloseBtn');
+
+        if (isConfirm) {
+            const confirmBtn = document.createElement('button');
+            confirmBtn.textContent = 'Ya';
+            confirmBtn.classList.add('modal-btn', 'btn-primary');
+            confirmBtn.style.marginRight = '10px'; // Add some spacing
+
+            const cancelBtn = document.createElement('button');
+            cancelBtn.textContent = 'Tidak';
+            cancelBtn.classList.add('modal-btn', 'btn-secondary');
+
+            // Replace the single OK button with Yes/No
+            newMessageBoxCloseBtn.style.display = 'none'; // Hide the original OK button
+            messageBoxCloseBtn.parentNode.insertBefore(confirmBtn, newMessageBoxCloseBtn);
+            messageBoxCloseBtn.parentNode.insertBefore(cancelBtn, newMessageBoxCloseBtn);
+
+            confirmBtn.addEventListener('click', () => {
+                messageBoxOverlay.classList.remove('show');
+                if (callback) callback(true);
+                // Clean up buttons
+                confirmBtn.remove();
+                cancelBtn.remove();
+                newMessageBoxCloseBtn.style.display = 'block'; // Show original OK button for next use
+            });
+            cancelBtn.addEventListener('click', () => {
+                messageBoxOverlay.classList.remove('show');
+                if (callback) callback(false);
+                // Clean up buttons
+                confirmBtn.remove();
+                cancelBtn.remove();
+                newMessageBoxCloseBtn.style.display = 'block'; // Show original OK button for next use
+            });
+        } else {
+            newMessageBoxCloseBtn.style.display = 'block'; // Ensure OK button is visible
+            newMessageBoxCloseBtn.addEventListener('click', () => {
+                messageBoxOverlay.classList.remove('show');
+                if (callback) callback();
+            });
+        }
+
+        messageBoxOverlay.addEventListener('click', (e) => {
+            if (e.target === messageBoxOverlay && !isConfirm) { // Only close on overlay click if not a confirm dialog
+                messageBoxOverlay.classList.remove('show');
+                if (callback) callback();
+            }
+        });
+    }
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const tabLinks = document.querySelectorAll('.tab-link');
+        const pages = document.querySelectorAll('.page');
+        const cards = document.querySelectorAll('.card');
+        let fileExplorerInitialized = false;
+        let safelinkHistoryLoaded = false; // Changed from listenerActive to loaded
+
+        function showPage(pageId) {
+            pages.forEach(page => page.classList.remove('active'));
+            tabLinks.forEach(link => {
+                // Remove active class from tab links that correspond to internal pages
+                if (link.getAttribute('data-page')) {
+                    link.classList.remove('active');
+                }
+            });
+
+            const targetPage = document.getElementById(pageId);
+            if (targetPage) targetPage.classList.add('active');
+
+            const targetLink = document.querySelector(`.tab-link[data-page="${pageId}"]`);
+            if (targetLink) targetLink.classList.add('active');
+            
+            if (pageId === 'page-files' && !fileExplorerInitialized) {
+                initFileExplorer();
+                fileExplorerInitialized = true;
+            }
+
+            // Load Safelink history when the Safelink page is shown
+            if (pageId === 'page-safelink' && !safelinkHistoryLoaded) {
+                loadSafelinkHistoryFromLocalStorage();
+                safelinkHistoryLoaded = true;
+            }
+        }
+
+        tabLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const pageId = link.getAttribute('data-page');
+                const externalUrl = link.getAttribute('data-url');
+
+                if (externalUrl) {
+                    window.open(externalUrl, '_blank');
+                    // Remove active class from all internal page tabs when opening external link
+                    tabLinks.forEach(l => l.classList.remove('active'));
+                } else if (pageId) {
+                    showPage(pageId);
+                }
+            });
+        });
+
+        cards.forEach(card => {
+            card.addEventListener('click', () => {
+                const pageId = card.getAttribute('data-page');
+                const externalUrl = card.getAttribute('data-url');
+
+                if (externalUrl) {
+                    window.open(externalUrl, '_blank');
+                    // Optionally, you might want to switch the active tab to the dashboard if an external link is clicked from a card
+                    showPage('page-dashboard');
+                } else if (pageId) {
+                    showPage(pageId);
+                }
+            });
+        });
+
+        // --- LOGIKA SAFELINK ---
+        const safelinkForm = document.getElementById('safelink-form');
+        const safelinkResult = document.getElementById('safelink-result');
+        const generateBtn = document.getElementById('generate-btn');
+        const generateNewBtn = document.getElementById('generate-new-btn');
+        const copyBtn = document.getElementById('copy-btn');
+        const originalUrlInput = document.getElementById('original-url');
+        const generatedLinkSpan = document.getElementById('generated-link');
+        const safelinkHistoryList = document.getElementById('safelink-history-list');
+
+        generateBtn.addEventListener('click', async () => {
+            const originalUrl = originalUrlInput.value.trim();
+            if (originalUrl) {
+                // Basic URL validation
+                try {
+                    new URL(originalUrl);
+                } catch (e) {
+                    showMessage('Error', 'URL asli tidak valid. Harap masukkan URL yang benar.');
+                    return;
+                }
+
+                const generatedUrl = `https://www.moriyukplus.web.id/p/loading-unduh.html?url=${btoa(originalUrl)}`;
+                generatedLinkSpan.textContent = generatedUrl;
+                safelinkForm.style.display = 'none';
+                safelinkResult.style.display = 'block';
+
+                // Save to Local Storage
+                saveSafelinkToLocalStorage(originalUrl, generatedUrl);
+                showMessage('Berhasil!', 'Link aman berhasil dibuat dan disimpan.');
+
+            } else {
+                showMessage('Peringatan', 'Masukkan URL asli terlebih dahulu.');
+            }
+        });
+
+        copyBtn.addEventListener('click', () => {
+            const textToCopy = generatedLinkSpan.textContent;
+            const textArea = document.createElement('textarea');
+            textArea.value = textToCopy;
+            textArea.style.position = 'fixed';
+            textArea.style.opacity = '0';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                copyBtn.textContent = 'Tersalin!';
+                setTimeout(() => { copyBtn.textContent = 'Salin'; }, 2000);
+                showMessage('Berhasil', 'Link berhasil disalin ke clipboard!');
+            } catch (err) {
+                console.error('Failed to copy text:', err);
+                showMessage('Gagal', 'Gagal menyalin link. Silakan coba secara manual.');
+            }
+            document.body.removeChild(textArea);
+        });
+
+        generateNewBtn.addEventListener('click', () => {
+            originalUrlInput.value = '';
+            safelinkResult.style.display = 'none';
+            safelinkForm.style.display = 'block';
+        });
+        
+        showPage('page-dashboard');
+    });
+
+    // ===================================================================
+    // BAGIAN 2: LOGIKA FILE EXPLORER
+    // ===================================================================
+    function initFileExplorer() {
+        const fileSystem = {
+            type: 'folder', name: 'emulated', content: [
+                { name: 'Android', type: 'folder', items: 1, date: '01/07/25', content: [] },
+                { name: 'GAME VISUAL NOVEL', type: 'folder', items: 17, date: '11/07/25', content: [
+                    { name: 'Eternum [OK].apk', type: 'app', size: '3.4GB', version: '0.8.0', date: '03/07/25', url: 'https://drive.google.com/uc?export=download&id=1yDM4PFpdZNIGo-ULl50yRBqpHTeCZXs_', icon: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg7i_T8GSs27QkZpUHw-xejpOfMyK15VrZ5hPquN_ITwcaxb5auynWM1jiaJQf9NG7d5p6zfSoZ3MhcyL33b6t_nod3O0AlPCwmGwtH3PWYsZ1w8y-rpmJ-HimDsCKtml0pPiJVmTy7Sf6TYYGRRxNge8smiOv_fwQdECcbRIWP7Y5bWnXs738vFw4M_IP0/s1600/images.jpeg' },
+                    { name: 'sicae [OK].apk', type: 'app', size: '839MB', version: 'Ep 07', date: '03/07/25', url: 'https://drive.google.com/uc?export=download&id=1TetSGXKNgwaqySmkcxZh_WDpdmKGKVcl', icon: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgEMWCuyfBSo3QJhnYiDWtgHvOwBmzFO5HfycfySz7LvoL3B8QHcKF4JAp-y23ke0dPvk6f3fNPBakICxc4lSOYGxqKuBBjXObMTM1OrET9zYOT_iKVlkivnRCRTFxSjo3lVzsi9-QPfvGP5dF9zT5Ry4SMxlPqx6cEbOaqjskKhn4JbcPqepWJdRbeH-6a/s1600/images%20%281%29.jpeg' },
+                    { name: 'Apocalypse 2059 [OK].apk', type: 'app', size: '961MB', version: '0.25', date: '03/07/25', url: 'https://drive.google.com/uc?export=download&id=1bv1iH-mz8sYs3qWXlFxJxCi3gpdZ5q7', icon: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgsFk8lCFZdgSHkzmyWJXY7Kj4u7aFibgnLCXjreCALySBoTNlsNUXhBfmtVLncblStfAmRJr5dh0zdcHNBTyPbji15rioVVp0__QN97z1UA7Zjl2IO1nTQfLL-vxTGHOJfi-UFbMniXlI7RZBgWzuDjHE3MADpHI4Jrnm3LgB9Uh0g6mmmBjfqfxUWsBEB/s1600/images%20%282%29.jpeg' },
+                    { name: 'Artifice [OK].apk', type: 'app', size: '744MB', version: 'PROLOGE', date: '03/07/25', url: 'https://drive.google.com/uc?export=download&id=1s3yuTSUM5M0GPvtCCOx2qjeVdpwvmkku', icon: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjNUc_7UfdPxQQQVAh44ylQcGUxWqb_NyqTV1sA9IKeuyoykveGJ87ahsC2Oxdl_c8K8f9u6ohBARn8CbRNBhTz4ih14qYUIgffT9ogxKewBCnIfX1zeVWNhQDvsVTOnATHYecOzq9NtcPJIbEggzygbQGb66kN4qXwsm_mJ4eUoxACDvjkLoaGC7sYwdvQ/s1600/images%20%283%29.jpeg' },
+                    { name: 'Crystalis [OK].apk', type: 'app', size: '1.0GB', version: '0.1.0', date: '03/07/25', url: 'https://drive.google.com/uc?export=download&id=1MTZWd9LlfAMoku7cE9tSKFdGKoSnYShW', icon: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhQnpwvFMzJ2J6qdaIjAgDktYa-zcRWmsLDk1EqKN8tkry_dMaIlBS9squqSRd3_Q_MST5TjKe2hyQ9XM5MwnZopZcvgn8lxa2GTR_IsspAD7cCd3sRJpsT05yEXXyLpckTM_JGRAkGGFu6lqbnHvM9MwnZopZcvgn8lxa2GTR_IsspAD7cCd3sRJpsT05yEXXyLpckTM_JGRAkGGFu6lqbnHvM9MzoPZFNoOu-Z755WeG-rhmZvH1AN5qUXULeu2qy/s1600/images%20%284%29.jpeg' },
+                    { name: 'Wild Cats [OK].apk', type: 'app', size: '2.6GB', version: '0.2', date: '03/07/25', url: 'https://drive.google.com/uc?export=download&id=1AL5iIHqTWr0xMJN-fhD6Pim-s00_HV_O', icon: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhX2I40S417pD896u2r0F1vO_XVncOnwFHCz30vPP3NUEs0GVYPshnRILdjM3J2PP3dOQULsI6dKEwgo3A7hKpbNMKhtY1pQsfTA105-KVEwoUvvp2ArZMqc43CK0TEglVk3VW2LgcrYLy095P60Y9uT-4fsG4elIahLRJn6Srtpm1sROPi9os71JnD3i6O/s1600/images%20%285%29.jpeg' },
+                    { name: 'Realm Invader.apk', type: 'app', size: '1.79GB', version: 'Ep. 2 P1', date: '03/07/25', url: '#', icon: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg7Z1rE-Nwi9S5zLJaWhZ0bM97C84KU_7AJoNaEWW9arIrWotbZGHFPVwQzDUsEqqosP418cIaOAChLXrSbEAKCwoY7ndukukj93Gzw-SAW-ooywf6FPsKd3wnxX6e4D5RKTCERryV6B48DJaU7Uyif8eBj7_e-jyau3u4ZbPY_DxJqn0HyXrasg2qA1XHd/s1600/PK66Bn.jpg' },
+                    { name: 'Quantum.apk', type: 'app', size: '1.8GB', version: 'V0.1-02', date: '03/07/25', url: '#', icon: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi4BipE9cLF5K0vhVClwldFWwX7iIqvJ6vtpUHc0VxHycVpRneE9HEkWUncLwLNc5u52ImPgsRgUQCz8MzP80mOzz6g4PiTpHC4aUGzIxaidGg3lNn7d5SGNNyaRTxbzUzvzp2b4UnhyqOZnUHHZVVd1c5VaOiQ8B-eIa5dU3DsfDVt2_0f-0htGG43MPvn/s1600/FB_IMG_1752998473596.jpg' },
+                    { name: 'Late Hours.apk', type: 'app', size: '2.58GB', version: 'CH. 1 Ep1', date: '03/07/25', url: '#', icon: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjYjMFN9PPoWPNXkWiXMhc7iLfh9KFTrc0yUMIsDcq9DsC5wTE20WV4DXbFgcTkMfdwdDaskMrBYhC-sol4B6mn1nWKGdZMZjXBV0tG38X1NbXJCThqXQCds3vCRhjAw5HFC-2FBApOzspFqlEBq0FEYNdVHaD_dh9z5yB1Qn5ChBUlSagusYk8RMojOnwh/s1600/FB_IMG_1752998513764.jpg' },
+                    { name: 'STELLA.apk', type: 'app', size: '675MB', version: 'V0.1.1', date: '03/07/25', url: '#', icon: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhGWs0ZvpzZaYpfe2ZlpSs_dFM2ohhqWoREQcmUbfDuJNbn0E1xYf9tmqmz_uwt7LOMReIfMSE_x7x89H0VdBzRan9gwgr0bCZq_dnzWU-_el34finP0XVNETBRV9mcVOvFROLSFtGUlnmnRmB0D1MUh_14eUr-hGun7BbZGJTP6O_dWMbrYs7Xbs31BT8f/s1600/FB_IMG_1752998562379.jpg' },
+                    { name: 'Reconsruction.apk', type: 'app', size: '1.73GB', version: 'v0.2', date: '03/07/25', url: '#', icon: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhJzyackAWWVmoHTH2WqgGRcmFfYN-ufx9oTZVophrSGWSEUMN14HE48D0wCjpft2qohRa6GE1RJTeB2J-wtM4tjiOl-q9uweEYlFzI5Qdq5UJlNyMPFW7XLl3QBY_JqC5nNMiqVUx-zfVWT-yLkZzbWFetkID9QN4T1t4Rojw5_5Ih3on9s3mzWLE7W-CR/s1600/FB_IMG_1752998626381.jpg' },
+                    { name: 'Myth Of Slayer.apk', type: 'app', size: '2.69GB', version: 'Ch. 07', date: '03/07/25', url: '#', icon: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEivS3SlCwseJfcxDm_dc6spcN3kTsiyU0lfmoCXTmIl7IOrGYfwtU-gRw_rXPU-joTPGurknkmi1OH-KbxekGULT79H2prJqxNGWFCuI8oL63ABU3ktK3vD9YeFDnzzv7naKgSMy4UpmLhGBT0_OImyk8OmlpQXAClaZQExZD-qYl/s1600/FB_IMG_1752998632505.jpg' },
+                    { name: 'Deathless.apk', type: 'app', size: '1.8GB', version: 'Ep. 01', date: '03/07/25', url: '#', icon: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhSjFS8PyjjXWfSqucT7xGJMibIs4d-oTmRKOUCn6gwnkcXmY8jhZ7n12rTca41Xc5ds69YoXOjBbsSfmMjKHRTUSvcEpRCDhlyVlbhzOA7vDIa8oxMKeK7ekj_SWAGUmuEqaMBWrqAU5HZLk9SVH1Y6pOyXDzocxOKCXuDRnCRHcFYq55c7u01uwgA72zf/s1600/FB_IMG_1752998666074.jpg' },
+                    { name: 'Dawnfall.apk', type: 'app', size: '1.8GB', version: 'V0.1', date: '03/07/25', url: '#', icon: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgaE19XM0gFWr1uKU9QnaYG2bHPT3c5hxIi8c0Du2yAiSrpr1P8qsqtHlK5oaXyj-tN13RdERB7_VJu3G_4EyzPT_X2r6kY2NTETI_9C-x1-yEaoyKNhSomsgVv0b0a4O5mw3LfoO9zbCWT6nOs0hOFROn4IPXWNnkuvW1G-f_vFJ9umzHC3_DcmUoTDqCa/s1600/FB_IMG_1752998673954.jpg' },
+                    { name: 'Heliorise.apk', type: 'app', size: '1.8GB', version: 'V0.0.1', date: '03/07/25', url: '#', icon: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhiDJIkGgLPi1sndR1UxfHiWGi5nDlk2aA7rKybGGs3RGOEihpah8jS69ZbZ2uYcgWoFs7o2FVBgte1dxaVE7qcTkURoPn6AzcssP2Lf_29j9PY7MPEyceUEMdyrpYfo-YNLNedKd-slhmt9uXL4yKCt-w84HeAsmTsi8RyQXITYd2gujCLebrohzuL9wOd/s1600/FB_IMG_1752999448275.jpg' },
+                    { name: 'DropOud Saga.apk', type: 'app', size: '1.8GB', version: 'v0.12.0b', date: '03/07/25', url: '#', icon: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi54mp38yetynw1k2ckecxNM2ObRazKvC1pVJfDXDFUedro4WTDmJQEcTPjrksVowPar5lOm60XTcz5a-yg-7JQYaduWncexBZYo6jLqzZu4DsMNdKDegyvJxxf38JaDKFPB2pvwGBVhzkd_4mFuCceRrbp8nIyBODMcUG9OzIRLPj7QT8y9MXZwbOJLmav/s1600/FB_IMG_1752998685026.jpg' },
+                    { name: 'Eden.apk', type: 'app', size: '1.8GB', version: 'Ch. 03', date: '03/07/25', url: '#', icon: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiufi1xRJTEGYFodEd6nsSw3tgYjgKBPNTp1reSJqCz0dBxpfJTq1fuiiqBTbnoD1HmFTSzd9EB4kT6dJeP-j2GP4Oab3V_bEp-iq0Kioar_izgtp3qLjmhwH4Xm-pwRmkdJROr8njVvWgFDSRCXe3Pyte1KNxr9e_DPZpTDVKwNrAKwXJsfIU3u7dnvZX9/s1600/FB_IMG_1752998679454.jpg' },
+                    { name: 'Classroom Affair.apk', type: 'app', size: '428MB', version: 'Ch. 03', date: '03/07/25', url: '#', icon: 'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjZKh3o3Sh2XKKZYpV9JnjAZ5UgLLDEODPD0rKcRAKkkga_ad_YByoH3ME8eTPJBz5T8Br2HjHVkv2OixqjI_ZuNLk7NMvEuVWUwncR4JVkmX2xjjH2prJqxNGWFCuI8oL63ABU3ktK3vD9YeFDnzzv7naKgSMy4UpmLhGBT0_OImyk8OmlpQXAClaZQExZD-qYl/s1600/FB_IMG_1753001276029.jpg' },
+                ]},
+                { name: 'init.js', type: 'code', size: '2KB', date: '18/07/25', content: "console.log('System Initialized');" },
+                { name: 'LICENSE', type: 'document', size: '1.5KB', date: '10/07/25', url: '#' },
+            ]
+        };
+        const icons = {
+            folder: '<svg xmlns="http://www.w3.org/2000/svg" fill="#FFC107" viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2z"/></svg>',
+            document: '<svg xmlns="http://www.w3.org/2000/svg" fill="#FFFFFF" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>',
+            code: '<svg xmlns="http://www.w3.org/2000/svg" fill="#03A9F4" viewBox="0 0 24 24"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>',
+            image: '<svg xmlns="http://www.w3.org/2000/svg" fill="#4CAF50" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>',
+            app: '<svg xmlns="http://www.w3.org/2000/svg" fill="#E91E63" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>',
+        };
+
+        const fmBody = document.getElementById('fm-body');
+        const fmPath = document.getElementById('fm-path');
+        const backBtn = document.getElementById('fm-back-btn');
+        const contextMenu = document.getElementById('context-menu');
+        
+        if (!document.getElementById('installModal')) {
+            document.body.insertAdjacentHTML('beforeend', `
+                <div id="installModal" class="modal-overlay"><div class="modal-content"><div class="modal-header"><div id="installIcon" class="item-icon"></div><h3 id="installTitle" class="modal-title"></h3></div><div class="modal-body install-info"><p>Anda akan menginstal aplikasi ini.</p><p><strong>Nama:</strong> <span id="installName"></span></p><p><strong>Ukuran:</strong> <span id="installSize"></span></p><p><strong>Versi:</strong> <span id="installVersion"></span></p></div><div class="modal-footer"><button class="modal-btn btn-secondary" data-close>Batal</button><a href="#" id="installLink" class="modal-btn btn-primary" download>Instal</a></div></div></div>
+                <div id="downloadModal" class="modal-overlay"><div class="modal-content"><div class="modal-header"><div id="downloadIcon" class="item-icon"></div><h3 id="downloadTitle" class="modal-title"></h3></div><div class="modal-body"><p>Siap untuk mengunduh file.</p><p><strong>Ukuran:</strong> <span id="downloadSize"></span></p></div><div class="modal-footer"><button class="modal-btn btn-secondary" data-close>Batal</button><a href="#" id="downloadLink" class="modal-btn btn-primary" download>Download</a></div></div></div>
+                <div id="codeModal" class="modal-overlay"><div class="modal-content"><div class="modal-header"><h3 id="codeTitle" class="modal-title"></h3></div><div class="modal-body"><pre id="code-preview"></pre></div><div class="modal-footer"><button class="modal-btn btn-primary" data-close>Tutup</button></div></div></div>
+                <div id="imageModal" class="modal-overlay"><div class="modal-content" style="background-color: transparent; max-width: 90vw; overflow: visible;"><div class="modal-body" style="padding:0;"><img id="image-preview" src=""></div><div class="modal-footer" style="justify-content:center; border-top:0; padding-top:20px;"><button class="modal-btn btn-secondary" data-close>Kembali</button><a href="#" id="imageDownloadLink" class="modal-btn btn-primary" download>Download</a></div></div></div>
+            `);
+        }
+
+        let pathStack = [fileSystem];
+        let activeItem = null;
+        
+        function renderExplorer() {
+            fmBody.innerHTML = '';
+            const currentFolder = pathStack[pathStack.length - 1];
+            const sortedContent = [...currentFolder.content].sort((a, b) => {
+                if (a.type === 'folder' && b.type !== 'folder') return -1;
+                if (a.type !== 'folder' && b.type === 'folder') return 1;
+                return a.name.localeCompare(b.name);
+            });
+            if (sortedContent.length === 0) {
+                fmBody.innerHTML = `<p style="text-align:center; color: var(--secondary-text); margin-top: 40px;">Folder ini kosong</p>`;
+            } else {
+                sortedContent.forEach(item => {
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'list-item';
+                    itemEl.addEventListener('click', (e) => handleItemClick(e, item));
+                    const iconHtml = item.type === 'app' && item.icon ? `<img src="${item.icon}" alt="app icon" onerror="this.style.display='none'">` : icons[item.type] || icons.document;
+                    let meta = (item.type === 'folder') ? `${item.items || 0} item` : item.size || '';
+                    itemEl.innerHTML = `<div class="item-icon">${iconHtml}</div><div class="item-details"><div class="item-name">${item.name}</div><div class="item-meta">${meta}</div></div><div class="item-date">${item.date}</div>`;
+                    fmBody.appendChild(itemEl);
+                });
+            }
+            fmBody.scrollTop = 0;
+            updateHeader();
+        }
+        
+        function handleItemClick(event, item) {
+            hideContextMenu();
+            if (item.type === 'folder') {
+                pathStack.push(item);
+                renderExplorer();
+            } else {
+                activeItem = item;
+                showContextMenu(event);
+            }
+        }
+
+        function updateHeader() {
+            backBtn.style.display = pathStack.length > 1 ? 'block' : 'none';
+            fmPath.textContent = `/storage/${pathStack.map(f => f.name).join('/')}`;
+        }
+
+        backBtn.addEventListener('click', () => {
+            if (pathStack.length > 1) {
+                pathStack.pop();
+                renderExplorer();
+            }
+        });
+
+        function showContextMenu(event) {
+            contextMenu.innerHTML = '';
+            const menuActions = {
+                'app': [{ label: 'Instal', action: openInstallModal }],
+                'document': [{ label: 'Download', action: openDownloadModal }],
+                'code': [{ label: 'Lihat', action: openCodeModal }],
+                'image': [{ label: 'Lihat', action: openImageModal }, { label: 'Download', action: openDownloadModal }]
+            };
+            const actions = menuActions[activeItem.type] || [];
+            actions.forEach(({ label, action }) => {
+                const menuItemEl = document.createElement('div');
+                menuItemEl.className = 'context-menu-item';
+                menuItemEl.innerHTML = `<span>${label}</span>`;
+                menuItemEl.onclick = (e) => { e.stopPropagation(); hideContextMenu(); action(activeItem); };
+                contextMenu.appendChild(menuItemEl);
+            });
+            contextMenu.style.display = 'block';
+            const rect = event.currentTarget.getBoundingClientRect();
+            contextMenu.style.top = `${rect.bottom}px`;
+            contextMenu.style.left = `${rect.left}px`;
+        }
+
+        function hideContextMenu() { contextMenu.style.display = 'none'; }
+        
+        function openModal(modalId, setupFn) {
+            const modal = document.getElementById(modalId);
+            if (setupFn) setupFn();
+            modal.style.display = 'flex';
+        }
+        
+        const openInstallModal = (item) => openModal('installModal', () => {
+            document.getElementById('installIcon').innerHTML = item.icon ? `<img src="${item.icon}" onerror="this.style.display='none'">` : icons.app;
+            document.getElementById('installTitle').textContent = item.name;
+            document.getElementById('installName').textContent = item.name;
+            document.getElementById('installSize').textContent = item.size;
+            document.getElementById('installVersion').textContent = item.version;
+            document.getElementById('installLink').href = item.url;
+        });
+        
+        const openDownloadModal = (item) => openModal('downloadModal', () => {
+            document.getElementById('downloadIcon').innerHTML = icons[item.type] || icons.document;
+            document.getElementById('downloadTitle').textContent = item.name;
+            document.getElementById('downloadSize').textContent = item.size;
+            document.getElementById('downloadLink').href = item.url;
+        });
+
+        const openCodeModal = (item) => openModal('codeModal', () => {
+            document.getElementById('codeTitle').textContent = item.name;
+            document.getElementById('code-preview').textContent = item.content;
+        });
+        
+        const openImageModal = (item) => openModal('imageModal', () => {
+            const downloadLink = document.getElementById('imageDownloadLink');
+            document.getElementById('image-preview').src = item.url;
+            downloadLink.href = item.url;
+            downloadLink.download = item.name;
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.list-item')) hideContextMenu();
+            if (e.target.hasAttribute('data-close') || e.target.classList.contains('modal-overlay')) {
+                e.target.closest('.modal-overlay').style.display = 'none';
+            }
+        });
+
+        renderExplorer();
+    }
+
+    // ===================================================================
+    // BAGIAN 3: LOGIKA LOCAL STORAGE & RIWAYAT SAFELINK
+    // ===================================================================
+
+    const LOCAL_STORAGE_KEY = 'safelinkHistory';
+
+    /**
+     * Saves a new safelink entry to Local Storage.
+     * @param {string} originalUrl - The original URL.
+     * @param {string} generatedUrl - The generated safelink URL.
+     */
+    function saveSafelinkToLocalStorage(originalUrl, generatedUrl) {
+        let safelinks = getSafelinksFromLocalStorage();
+        const newSafelink = {
+            id: Date.now().toString(), // Simple unique ID
+            originalUrl: originalUrl,
+            generatedUrl: generatedUrl,
+            timestamp: new Date().toISOString() // ISO string for consistent date handling
+        };
+        safelinks.unshift(newSafelink); // Add to the beginning for most recent first
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(safelinks));
+        renderSafelinkHistory(safelinks); // Re-render the list immediately
+    }
+
+    /**
+     * Retrieves safelink entries from Local Storage.
+     * @returns {Array<Object>} An array of safelink objects.
+     */
+    function getSafelinksFromLocalStorage() {
+        const storedSafelinks = localStorage.getItem(LOCAL_STORAGE_KEY);
+        return storedSafelinks ? JSON.parse(storedSafelinks) : [];
+    }
+
+    /**
+     * Loads safelink history from Local Storage and renders it.
+     */
+    function loadSafelinkHistoryFromLocalStorage() {
+        const safelinks = getSafelinksFromLocalStorage();
+        // Sort by timestamp in descending order (most recent first)
+        safelinks.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        renderSafelinkHistory(safelinks);
+    }
+
+    /**
+     * Deletes a safelink entry from Local Storage.
+     * @param {string} id - The ID of the safelink to delete.
+     */
+    function deleteSafelinkFromLocalStorage(id) {
+        let safelinks = getSafelinksFromLocalStorage();
+        const updatedSafelinks = safelinks.filter(item => item.id !== id);
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedSafelinks));
+        renderSafelinkHistory(updatedSafelinks); // Re-render the list
+    }
+
+    /**
+     * Renders the safelink history list in the UI.
+     * @param {Array<Object>} safelinks - An array of safelink objects.
+     */
+    function renderSafelinkHistory(safelinks) {
+        const safelinkHistoryList = document.getElementById('safelink-history-list');
+        safelinkHistoryList.innerHTML = ''; // Clear previous entries
+
+        if (safelinks.length === 0) {
+            safelinkHistoryList.innerHTML = `<p style="text-align:center; color: var(--secondary-text); margin-top: 20px;">Belum ada safelink yang dibuat.</p>`;
+            return;
+        }
+
+        safelinks.forEach(item => {
+            const itemEl = document.createElement('div');
+            itemEl.className = 'history-item';
+
+            // Removed truncation logic for originalUrlDisplay and generatedUrlDisplay
+            const originalUrlDisplay = item.originalUrl;
+            const generatedUrlDisplay = item.generatedUrl;
+
+            const timestampDate = new Date(item.timestamp);
+            const formattedDate = timestampDate.toLocaleString('id-ID', {
+                year: 'numeric', month: 'short', day: 'numeric',
+                hour: '2-digit', minute: '2-digit', second: '2-digit'
+            });
+
+            itemEl.innerHTML = `
+                <div class="history-item-details">
+                    <p><strong>URL Asli:</strong> ${originalUrlDisplay}</p>
+                    <p><strong>Link Aman:</strong> ${generatedUrlDisplay}</p>
+                </div>
+                <div class="history-item-actions">
+                    <button class="copy-btn" data-link="${item.generatedUrl}">Salin</button>
+                    <button class="delete-btn" data-id="${item.id}">Hapus</button>
+                </div>
+                <div class="timestamp">Dibuat: ${formattedDate}</div>
+            `;
+
+            // Add event listener for copy button
+            itemEl.querySelector('.copy-btn').addEventListener('click', (e) => {
+                const textToCopy = e.target.getAttribute('data-link');
+                const textArea = document.createElement('textarea');
+                textArea.value = textToCopy;
+                textArea.style.position = 'fixed';
+                textArea.style.opacity = '0';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    e.target.textContent = 'Tersalin!';
+                    setTimeout(() => { e.target.textContent = 'Salin'; }, 2000);
+                    showMessage('Berhasil', 'Link aman berhasil disalin!');
+                } catch (err) {
+                    console.error('Failed to copy text:', err);
+                    showMessage('Gagal', 'Gagal menyalin link. Silakan coba secara manual.');
+                }
+                document.body.removeChild(textArea);
+            });
+
+            // Add event listener for delete button
+            itemEl.querySelector('.delete-btn').addEventListener('click', (e) => {
+                const docId = e.target.getAttribute('data-id');
+                showMessage('Konfirmasi Hapus', 'Apakah Anda yakin ingin menghapus link ini dari riwayat?', true, (confirmed) => {
+                    if (confirmed) {
+                        deleteSafelinkFromLocalStorage(docId);
+                        showMessage('Berhasil', 'Link berhasil dihapus dari riwayat.');
+                    }
+                });
+            });
+
+            safelinkHistoryList.appendChild(itemEl);
+        });
+    }
+
+    // Initial call to load safelink history when the page loads
+    loadSafelinkHistoryFromLocalStorage();
+</script>
+
+</body>
+</html>
